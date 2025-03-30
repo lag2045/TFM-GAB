@@ -9,7 +9,7 @@ archivo = '/Users/hakeem/Desktop/cat_z00.npy'
 dat = np.load(archivo, allow_pickle=True).item()
 
 # Parámetros
-boxsize = 205.0  # Tamaño de la caja simulada
+boxsize = 205 # Tamaño de la caja simulada
 nbins = 20  # Número de bins
 bin_edges = np.logspace(-1, np.log10(boxsize / 2.1), nbins + 1)  # Ajustar rmax
 nthreads = 4  # Número de hilos
