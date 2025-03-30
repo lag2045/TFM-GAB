@@ -64,7 +64,7 @@ def procesar_sample(indices, tag):
             continue
 # Bins de masa de halo: Se agrupan halos en bins estrechos de masa para hacer el shuffling correctamente.
         log_mass = np.log10(halo_mass)
-        bin_width = 0.01
+        bin_width = 0.1
         mass_bins = np.arange(np.min(log_mass), np.max(log_mass) + bin_width, bin_width)
         if len(mass_bins) < 2:
             continue
