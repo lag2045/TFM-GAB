@@ -62,7 +62,7 @@ def procesar_sample(indices, tag):
             continue
 # Bin de masa de halo (con bin_width = 0.01)
         log_mass = np.log10(halo_mass)
-        bin_width = 0.01
+        bin_width = 0.1
         mass_bins = np.arange(np.min(log_mass), np.max(log_mass) + bin_width, bin_width)
         if len(mass_bins) < 2:
             continue
