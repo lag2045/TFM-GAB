@@ -23,31 +23,17 @@ halo_ids_all = np.array(dat['cross_sub2halo'])
 halo_pos_all = np.array(dat['halo_pos']) % boxsize
 halo_mass_all = np.array(dat['halo_mass'])
 
-# Ordena por M* y selecciona las 10,000 más masivas.
-indices_mst = np.argsort(gal_mst_all)[::-1][:10000]
-mst_sample = gal_mst_all[indices_mst]
-
-# Divide el muestreo en cuartiles: baja M* (< Q1) y alta M* (> Q3).
-p25, p75 = np.percentile(mst_sample, [25, 75])
-gal_mst_baja = indices_mst[mst_sample < p25]
-gal_mst_alta = indices_mst[mst_sample > p75]
-
-print(f"🔵 Galaxias con M* baja: {len(gal_mst_baja)}")
-print(f"🔴 Galaxias con M* alta: {len(gal_mst_alta)}")
- 
 # Esta función es el núcleo del análisis, ejecutada 100 veces para cada sample (muestra).
 def procesar_sample(indices, tag):
     ratios_all = [] # Inicializa las listas: Almacena los resultados de las correlaciones.
     bin_centers = None
-
 # Bucle de 100 shufflings: Fija una semilla diferente cada vez para reproducibilidad.
     for i in range(100):
         np.random.seed(i)
-        #Extrae la submuestra seleccionada
+         #Extrae la submuestra seleccionada
         gal_pos = gal_pos_all[indices]
         gal_type = gal_type_all[indices]
         halo_ids = halo_ids_all[indices]
-
 # Reorganiza los IDs y selecciona las propiedades de los halos correspondientes
         halos_usados = np.unique(halo_ids)
         if len(halos_usados) == 0:
@@ -69,7 +55,7 @@ def procesar_sample(indices, tag):
         bin_indices = np.digitize(log_mass, mass_bins)
 
         halos = []
-# Construye estructura de halos con centrals y satélites
+        # Construye estructura de halos con centrals y satélites
         for j in range(len(halo_pos)):
             mask = (halo_ids == j)
             gal_pos_i = gal_pos[mask]
@@ -122,35 +108,44 @@ def procesar_sample(indices, tag):
         ratios_all.append(ratio)
 
     if len(ratios_all) == 0:
-        print(f"⚠️ No se pudo calcular la correlación para {tag}.")
+        print(f"No se pudo calcular la correlación para {tag}.")
         return None, None, None
 # Almacena los resultados
     ratios_all = np.array(ratios_all)
-# Devuelve promedio y desviación estándar del ratio
+    # Devuelve promedio y desviación estándar del ratio
     mean_ratio = np.mean(ratios_all, axis=0)
     std_ratio = np.std(ratios_all, axis=0)
 
     return bin_centers, mean_ratio, std_ratio
 
-# Ejecuta la función para Masa estelar (M*) alta y baja.
-r_alta, mean_alta, std_alta = procesar_sample(gal_mst_alta, tag="mst_alta")
-r_baja, mean_baja, std_baja = procesar_sample(gal_mst_baja, tag="mst_baja")
+# Procesar 10k, 20k, 30k galaxias (más masivas directamente)
 
+samples = [10000, 20000, 30000]
+colores = ['yellow', 'red', 'green']
+labels = ['10.000 galaxias', '20.000 galaxias', '30.000 galaxias']
 # Grafica los resultados del plot comparativo
 plt.figure(figsize=(9,6))
-if r_baja is not None:
-    plt.semilogx(r_baja, mean_baja, color='purple', label='M* baja')
-    plt.fill_between(r_baja, mean_baja - std_baja, mean_baja + std_baja, color='purple', alpha=0.3, label=r'M* baja ±1$\sigma$')
-if r_alta is not None:
-    plt.semilogx(r_alta, mean_alta, color='goldenrod', label='M* alta')
-    plt.fill_between(r_alta, mean_alta - std_alta, mean_alta + std_alta, color='goldenrod', alpha=0.3, label=r'M* alta ±1$\sigma$')
+
+for sample_size, color, label in zip(samples, colores, labels):
+    # Selección directa de las galaxias más masivas
+    indices_mst = np.argsort(gal_mst_all)[::-1][:sample_size]
+
+    r_mst, mean_mst, std_mst = procesar_sample(indices_mst, tag=f"mst_top_{sample_size}")
+
+    if r_mst is not None:
+        plt.semilogx(r_mst, mean_mst, color=color, label=f'{label} (M$_\star$)')
+        plt.fill_between(r_mst, mean_mst - std_mst, mean_mst + std_mst, color=color, alpha=0.3)
 
 plt.axhline(1, linestyle='--', color='black')
-plt.xlabel("Separación r [Mpc/h]", fontsize=12)
-plt.ylabel(r"Ratio $\xi_{\mathrm{shuffle}} / \xi_{\mathrm{original}}$", fontsize=12)
-plt.title("Comparación del Galaxy Assembly Bias por masa estelar")
+plt.xlim(0.1, 20)
+plt.ylim(0.6, 1.06)
+plt.xlabel(r"$r$ [$\mathrm{Mpc}/h$]", fontsize=12)
+plt.ylabel(r"$R = (\xi_{\mathrm{shuffled}} / \xi_{\mathrm{original}})$", fontsize=12)
+plt.title("Sesgo de ensamblaje de galaxias en función de la masa estelar")
 plt.legend()
 plt.grid(True, alpha=0.5)
 plt.tight_layout()
-plt.savefig(os.path.expanduser("~/Desktop/shuffling_comparacion_mstar.png"), dpi=300)
+plt.savefig(os.path.expanduser("~/Desktop/GAB_Mstar_MostMassive.png"), dpi=300)
 plt.show()
+
+print("Gráfico combinado generado usando solo las galaxias más masivas.")
