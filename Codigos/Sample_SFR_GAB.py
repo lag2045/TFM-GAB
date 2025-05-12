@@ -26,27 +26,15 @@ halo_pos_all = np.array(dat['halo_pos']) % boxsize
 halo_mass_all = np.array(dat['halo_mass'])
 sfr_all = np.array(dat['sfr'])  # Nueva propiedad: Star Formation Rate
 
-# Ordena galaxias por SFR y selecciona las 10,000 con SFR más alta.
-indices_sfr = np.argsort(sfr_all)[::-1][:10000]
-sfr_sample = sfr_all[indices_sfr]
-
-# Calcular percentiles para separar en alta y baja SFR: Alta SFR: Q3–Q4 (por encima del percentil 75) / Baja SFR: Q1–Q2 (por debajo del percentil 25).
-p25, p75 = np.percentile(sfr_sample, [25, 75])
-gal_sfr_baja = indices_sfr[sfr_sample < p25]
-gal_sfr_alta = indices_sfr[sfr_sample > p75]
-
-print(f"🔵 Galaxias con SFR baja: {len(gal_sfr_baja)}")
-print(f"🔴 Galaxias con SFR alta: {len(gal_sfr_alta)}")
-
 # Función de procesamiento para un sample específico: Esta función repite el análisis de correlación para un grupo (alta o baja SFR).
 def procesar_sample(indices, tag):
-# Iniciálizacion: Se almacenarán aquí los resultados de los 100 shufflings.
+    # Iniciálizacion: Se almacenarán aquí los resultados de los 100 shufflings.
     ratios_all = []
     bin_centers = None
 # Bucle con 100 repeticiones: Fija semilla para reproducibilidad.
     for i in range(100):
         np.random.seed(i)
-# Extrae los datos de la submuestra
+        # Extrae los datos de la submuestra
         gal_pos = gal_pos_all[indices]
         gal_type = gal_type_all[indices]
         halo_ids = halo_ids_all[indices]
@@ -71,7 +59,7 @@ def procesar_sample(indices, tag):
         bin_indices = np.digitize(log_mass, mass_bins)
 
         halos = []
-# Estructura de halos: Para cada halo se guarda: su bin de masa. Posición central. Posiciones relativas de satélites.
+        # Estructura de halos: Para cada halo se guarda: su bin de masa. Posición central. Posiciones relativas de satélites.
         for j in range(len(halo_pos)):
             mask = (halo_ids == j)
             gal_pos_i = gal_pos[mask]
@@ -121,37 +109,44 @@ def procesar_sample(indices, tag):
 
         if bin_centers is None:
             bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
-        ratios_all.append(ratio) # Almacenamiento
+        ratios_all.append(ratio)
 
     if len(ratios_all) == 0:
-        print(f"⚠️ No se pudo calcular la correlación para {tag}.")
+        print(f" No se pudo calcular la correlación para {tag}.")
         return None, None, None
-# Resultado final de los 100 shufflings
+
     ratios_all = np.array(ratios_all)
     mean_ratio = np.mean(ratios_all, axis=0)
     std_ratio = np.std(ratios_all, axis=0)
 
     return bin_centers, mean_ratio, std_ratio
 
-# Ejecutar análisis para SFR baja y alta
-r_baja, mean_baja, std_baja = procesar_sample(gal_sfr_baja, tag="sfr_baja")
-r_alta, mean_alta, std_alta = procesar_sample(gal_sfr_alta, tag="sfr_alta")
+# Procesar las 10k, 20k y 30k galaxias con mayor SFR
 
+samples = [10000, 20000, 30000]
+colores = ['yellow', 'red', 'blue']
+labels = ['10.000 galaxias', '20.000 galaxias', '30.000 galaxias']
 # Grafica los resultados del plot comparativo y lo guarda en escritorio.
 plt.figure(figsize=(9,6))
-if r_baja is not None:
-    plt.semilogx(r_baja, mean_baja, color='green', label='SFR baja')
-    plt.fill_between(r_baja, mean_baja - std_baja, mean_baja + std_baja, color='green', alpha=0.3, label=r'SFR baja ±1$\sigma$')
-if r_alta is not None:
-    plt.semilogx(r_alta, mean_alta, color='orange', label='SFR alta')
-    plt.fill_between(r_alta, mean_alta - std_alta, mean_alta + std_alta, color='orange', alpha=0.3, label=r'SFR alta ±1$\sigma$')
+
+for sample_size, color, label in zip(samples, colores, labels):
+    indices_sfr = np.argsort(sfr_all)[::-1][:sample_size]
+    r_sfr, mean_sfr, std_sfr = procesar_sample(indices_sfr, tag=f"sfr_top_{sample_size}")
+
+    if r_sfr is not None:
+        plt.semilogx(r_sfr, mean_sfr, color=color, label=f'{label} (SFR)')
+        plt.fill_between(r_sfr, mean_sfr - std_sfr, mean_sfr + std_sfr, color=color, alpha=0.3)
 
 plt.axhline(1, linestyle='--', color='black')
-plt.xlabel("Separación r [Mpc/h]", fontsize=12)
-plt.ylabel(r"Ratio $\xi_{\mathrm{shuffle}} / \xi_{\mathrm{original}}$", fontsize=12)
-plt.title("Comparación del Galaxy Assembly Bias por SFR")
+plt.xlim(0.1, 20)
+plt.ylim(0.85, 1.12)
+plt.xlabel(r"$r$ [$\mathrm{Mpc}/h$]", fontsize=12)
+plt.ylabel(r"$R = (\xi_{\mathrm{shuffled}} / \xi_{\mathrm{original}})$", fontsize=12)
+plt.title("Sesgo de ensamblaje de galaxias en función de la tasa de formación estelar")
 plt.legend()
 plt.grid(True, alpha=0.5)
 plt.tight_layout()
-plt.savefig(os.path.expanduser("~/Desktop/shuffling_comparacion_sfr.png"), dpi=300)
+plt.savefig(os.path.expanduser("~/Desktop/GAB_SFR_MostActive.png"), dpi=300)
 plt.show()
+
+print("Gráfico de alta SFR generado y guardado en el escritorio.")
