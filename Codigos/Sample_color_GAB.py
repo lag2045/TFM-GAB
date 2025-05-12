@@ -1,14 +1,14 @@
 # Galaxy Assembly Bias (GAB) en función del color (g‒r) de las galaxias más brillantes en banda i
 # Importacion de librerias
 import numpy as np # operaciones matemáticas.
-import matplotlib.pyplot as plt  #  hacer gráficos
+import matplotlib.pyplot as plt #  hacer gráficos
 from Corrfunc.theory.xi import xi # calcular la función de correlación.
 import os # gestión de archivos
 
 # Parámetros globales de la caja de simulación 
 boxsize = 205 # tamaño de la caja de simulación (en Mpc/h)
 nthreads = 4 # número de hilos usados por Corrfunc
-bin_edges = np.logspace(np.log10(0.1), np.log10(50), 20)  # bins logarítmicos de distancia para la correlación
+bin_edges = np.logspace(np.log10(0.1), np.log10(50), 20) # bins logarítmicos de distancia para la correlación
 # carpeta para guardar resultados
 output_dir = "/Users/hakeem/Desktop/Python/shuffling_flexible"
 os.makedirs(output_dir, exist_ok=True)
@@ -25,56 +25,62 @@ halo_pos_all = np.array(dat['halo_pos']) % boxsize
 halo_mass_all = np.array(dat['halo_mass'])
 mag_abs = np.array(dat['col'])  # columnas: g, r, i
 
-# --- Análisis por magnitud i y color g-r ---
-# 1. Seleccionar las 10000 galaxias más brillantes en banda i (más negativas)
+mag_g = mag_abs[:, 0]
+mag_r = mag_abs[:, 1]
 mag_i = mag_abs[:, 2]
-indices_brightest = np.argsort(mag_i)[:10000]
+color_gr = mag_g - mag_r  # Color (g - r)
 
-# 2. Calcular color g - r: Calcula el color g−r para esas 10,000 galaxias.
-mag_g = mag_abs[indices_brightest, 0]
-mag_r = mag_abs[indices_brightest, 1]
-color_gr = mag_g - mag_r
-
-# 3. Histogramas de masa estelar y color: Visualiza la distribución de M* y color g–r entre las 10,000 más brillantes.
-plt.figure(figsize=(12, 5))
-plt.subplot(1, 2, 1)
-plt.hist(gal_mst_all[indices_brightest], bins=30, color='gray', edgecolor='black')
-plt.xlabel(r'log$_{10}$(M$_*$/M$_\odot$)', fontsize=12)
-plt.ylabel('Número de galaxias')
-plt.title('Masa estelar de las 10,000 más brillantes en banda i')
-
-plt.subplot(1, 2, 2)
-plt.hist(color_gr, bins=30, color='skyblue', edgecolor='black')
-plt.xlabel('Color (g - r)', fontsize=12)
-plt.ylabel('Número de galaxias')
-plt.title('Distribución de color g - r (banda i brillante)')
-plt.tight_layout()
-plt.savefig(os.path.expanduser('~/Desktop/histogramas_Mstar_color.png'))
-plt.show()
-
-# Selección de galaxias por color: Ajustar los cortes para colores. 
-# Define dos grupos:
-# Galaxias azules: color g–r < 0.6 (formación estelar activa).
-# Galaxias rojas: color g–r > 0.75 (cuenching, poca formación estelar).
-
+# === SELECCIÓN POR COLOR ===
 azul_cut = 0.6
 rojo_cut = 0.75
 
-gal_azules = indices_brightest[color_gr < azul_cut]
-gal_rojas = indices_brightest[color_gr > rojo_cut]
+indices_azules = np.where(color_gr < azul_cut)[0]
+indices_rojas = np.where(color_gr > rojo_cut)[0]
 
-print(f"🔵 Galaxias azules: {len(gal_azules)}")
-print(f"🔴 Galaxias rojas: {len(gal_rojas)}")
+# Igualar número de galaxias
+n_min = min(len(indices_azules), len(indices_rojas))
+indices_azules = indices_azules[np.argsort(mag_i[indices_azules])[:n_min]]  # más brillantes
+indices_rojas = indices_rojas[np.argsort(mag_i[indices_rojas])[:n_min]]    # más brillantes
+
+print(f"Número de galaxias azules seleccionadas: {len(indices_azules)}")
+print(f"Número de galaxias rojas seleccionadas: {len(indices_rojas)}")
+
+# 3. Histogramas de masa estelar y color: Visualiza la distribución de M* y color g–r entre las más brillantes.
+plt.figure(figsize=(14, 6))
+
+# Histograma de masa estelar
+plt.subplot(1, 2, 1)
+plt.hist(gal_mst_all[indices_azules], bins=30, color='blue', edgecolor='black', alpha=0.6, label='Galaxias azules')
+plt.hist(gal_mst_all[indices_rojas], bins=30, color='red', edgecolor='black', alpha=0.6, label='Galaxias rojas')
+plt.xlabel(r'$\log_{10}(M_*[M_\odot])$', fontsize=12)
+plt.ylabel('Número de galaxias')
+plt.title('Distribución de masa estelar')
+plt.legend()
+
+# Histograma de color g-r
+plt.subplot(1, 2, 2)
+plt.hist(color_gr[indices_azules], bins=30, color='blue', edgecolor='black', alpha=0.6, label='Galaxias azules')
+plt.hist(color_gr[indices_rojas], bins=30, color='red', edgecolor='black', alpha=0.6, label='Galaxias rojas')
+plt.xlabel('Color (g - r)', fontsize=12)
+plt.ylabel('Número de galaxias')
+plt.title('Distribución de color $(g - r)$')
+plt.legend()
+
+plt.tight_layout()
+plt.savefig(os.path.expanduser("~/Desktop/histogramas_mstar_color_azul_rojo.png"))
+plt.show()
+
+print("Histogramas de masa estelar y color generados (sin total).")
 
 # Función de procesamiento para un sample específico
 def procesar_sample(indices, tag): # Esta función calcula el Galaxy Assembly Bias para un grupo específico.
-# Incialización
+    # Incialización
     ratios_all = []
     bin_centers = None
 # Bucle de 100 shufflings: Se repite el shuffling 100 veces con diferente semilla.
     for i in range(100):
         np.random.seed(i)
-# Subcatálogo de galaxias
+        # Subcatálogo de galaxias
         gal_pos = gal_pos_all[indices]
         gal_type = gal_type_all[indices]
         halo_ids = halo_ids_all[indices]
@@ -153,7 +159,7 @@ def procesar_sample(indices, tag): # Esta función calcula el Galaxy Assembly Bi
         ratios_all.append(ratio)
 
     if len(ratios_all) == 0:
-        print(f"⚠️ No se pudo calcular la correlación para {tag}.")
+        print(f"No se pudo calcular la correlación para {tag}.")
         return None, None, None
 # Resultados: Devuelve la media y la desviación estándar del ratio.
     ratios_all = np.array(ratios_all)
@@ -163,24 +169,28 @@ def procesar_sample(indices, tag): # Esta función calcula el Galaxy Assembly Bi
     return bin_centers, mean_ratio, std_ratio
 
 # Ejecutar análisis para galaxias azules y rojas: Ejecuta la función para los dos grupos.
-r_azul, mean_azul, std_azul = procesar_sample(gal_azules, tag="galaxias_azules")
-r_rojo, mean_rojo, std_rojo = procesar_sample(gal_rojas, tag="galaxias_rojas")
+r_azul, mean_azul, std_azul = procesar_sample(indices_azules, tag="azules")
+r_rojo, mean_rojo, std_rojo = procesar_sample(indices_rojas, tag="rojas")
 
 # Muestra y guarda el plot comparativo.
 plt.figure(figsize=(9,6))
 if r_azul is not None:
-    plt.semilogx(r_azul, mean_azul, color='blue', label='Azules: media')
-    plt.fill_between(r_azul, mean_azul - std_azul, mean_azul + std_azul, color='blue', alpha=0.3, label=r'Azules $\pm$1$\sigma$')
+    plt.semilogx(r_azul, mean_azul, color='blue', label='Galaxias azules')
+    plt.fill_between(r_azul, mean_azul - std_azul, mean_azul + std_azul, color='blue', alpha=0.3)
 if r_rojo is not None:
-    plt.semilogx(r_rojo, mean_rojo, color='red', label='Rojas: media')
-    plt.fill_between(r_rojo, mean_rojo - std_rojo, mean_rojo + std_rojo, color='red', alpha=0.3, label=r'Rojas $\pm$1$\sigma$')
+    plt.semilogx(r_rojo, mean_rojo, color='red', label='Galaxias rojas')
+    plt.fill_between(r_rojo, mean_rojo - std_rojo, mean_rojo + std_rojo, color='red', alpha=0.3)
 
 plt.axhline(1, linestyle='--', color='black')
-plt.xlabel("Separación r [Mpc/h]", fontsize=12)
-plt.ylabel(r"Ratio $\xi_{\mathrm{shuffle}} / \xi_{\mathrm{original}}$", fontsize=12)
-plt.title("Comparación del Galaxy Assembly Bias por color")
+plt.xlim(0.1, 20)
+plt.ylim(0.54, 1.05)
+plt.xlabel(r"$r$ [$\mathrm{Mpc}/h$]", fontsize=12)
+plt.ylabel(r"$R = (\xi_{\mathrm{shuffled}} / \xi_{\mathrm{original}})$", fontsize=12)
+plt.title("Sesgo de ensamblaje de galaxias en función del color $(g - r)$")
 plt.legend()
 plt.grid(True, alpha=0.5)
 plt.tight_layout()
-plt.savefig(os.path.expanduser("~/Desktop/shuffling_comparacion_colores.png"), dpi=300)
+plt.savefig(os.path.expanduser("~/Desktop/GAB_Color_BlueRed_SIN_TOTAL.png"))
 plt.show()
+
+print("Análisis completo finalizado y guardado en el escritorio.")
