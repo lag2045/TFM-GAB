@@ -35,8 +35,8 @@ p25, p75 = np.percentile(mag_sample, [25, 75])
 gal_mag_brillante = indices_mag[mag_sample < p25]
 gal_mag_tenue = indices_mag[mag_sample > p75]
 
-print(f"🔆 Galaxias brillantes (más negativas): {len(gal_mag_brillante)}")
-print(f"🌒 Galaxias tenues (menos negativas): {len(gal_mag_tenue)}")
+print(f"Galaxias brillantes (más negativas): {len(gal_mag_brillante)}")
+print(f"Galaxias tenues (menos negativas): {len(gal_mag_tenue)}")
 
 # Función de procesamiento para un sample específico: Esta función calcula el shuffling para una submuestra dada.
 def procesar_sample(indices, tag):
@@ -124,7 +124,7 @@ def procesar_sample(indices, tag):
         ratios_all.append(ratio) # Acumula los resultados
 
     if len(ratios_all) == 0:
-        print(f"⚠️ No se pudo calcular la correlación para {tag}.")
+        print(f"No se pudo calcular la correlación para {tag}.")
         return None, None, None
 # Retorna media y desviación estándar del ratio
     ratios_all = np.array(ratios_all)
