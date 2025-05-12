@@ -24,29 +24,17 @@ halo_ids_all = np.array(dat['cross_sub2halo'])
 halo_pos_all = np.array(dat['halo_pos']) % boxsize
 halo_mass_all = np.array(dat['halo_mass'])
 mag_abs = np.array(dat['col'])  # columnas: g, r, i
-
-# Selección por magnitud i (mag_i): magnitud absoluta en banda i. Se seleccionan las 10,000 galaxias más brillantes (las de menor valor de magnitud, más negativo = más brillo).
-mag_i = mag_abs[:, 2]
-indices_mag = np.argsort(mag_i)[:10000]  # Las más brillantes (más negativas)
-mag_sample = mag_i[indices_mag]
-
-# Se dividen en cuartiles para definir 25% magnitudes más brillantes y tenues 25% menos brillantes dentro del sample.
-p25, p75 = np.percentile(mag_sample, [25, 75])
-gal_mag_brillante = indices_mag[mag_sample < p25]
-gal_mag_tenue = indices_mag[mag_sample > p75]
-
-print(f"Galaxias brillantes (más negativas): {len(gal_mag_brillante)}")
-print(f"Galaxias tenues (menos negativas): {len(gal_mag_tenue)}")
+mag_i = mag_abs[:, 2]  # Magnitud en banda i
 
 # Función de procesamiento para un sample específico: Esta función calcula el shuffling para una submuestra dada.
 def procesar_sample(indices, tag):
-# Inicialización: Para almacenar los resultados de cada corrida.
+    # Inicialización: Para almacenar los resultados de cada corrida.
     ratios_all = []
     bin_centers = None
 # Repite el proceso 100 veces: Usa una semilla diferente para cada shuffling.
     for i in range(100):
         np.random.seed(i)
-# Extrae las galaxias de la submuestra
+        # Extrae las galaxias de la submuestra
         gal_pos = gal_pos_all[indices]
         gal_type = gal_type_all[indices]
         halo_ids = halo_ids_all[indices]
@@ -71,7 +59,7 @@ def procesar_sample(indices, tag):
         bin_indices = np.digitize(log_mass, mass_bins)
 
         halos = []
-# Construcción de objetos halo. Se guarda para cada halo: ID, bin en masa, posición del halo, posición del central, satélites relativos al central.
+        # Construcción de objetos halo. Se guarda para cada halo: ID, bin en masa, posición del halo, posición del central, satélites relativos al central.
         for j in range(len(halo_pos)):
             mask = (halo_ids == j)
             gal_pos_i = gal_pos[mask]
@@ -133,25 +121,32 @@ def procesar_sample(indices, tag):
 
     return bin_centers, mean_ratio, std_ratio
 
-# Ejecuta el análisis para los dos grupos: Ejecutar para magnitud brillante y tenue
-r_brill, mean_brill, std_brill = procesar_sample(gal_mag_brillante, tag="mag_brillante")
-r_tenue, mean_tenue, std_tenue = procesar_sample(gal_mag_tenue, tag="mag_tenue")
+# Procesar las 10k, 20k, 30k galaxias más brillantes (menor mag i)
 
+samples = [10000, 20000, 30000]
+colores = ['orange', 'grey', 'green']
+labels = ['10.000 galaxias', '20.000 galaxias', '30.000 galaxias']
 # Grafica los resultados del plot comparativo y lo guarda.
 plt.figure(figsize=(9,6))
-if r_brill is not None:
-    plt.semilogx(r_brill, mean_brill, color='darkblue', label='Mag i brillante')
-    plt.fill_between(r_brill, mean_brill - std_brill, mean_brill + std_brill, color='blue', alpha=0.3, label='Brillante ±1σ')
-if r_tenue is not None:
-    plt.semilogx(r_tenue, mean_tenue, color='darkred', label='Mag i tenue')
-    plt.fill_between(r_tenue, mean_tenue - std_tenue, mean_tenue + std_tenue, color='red', alpha=0.3, label='Tenue ±1σ')
+
+for sample_size, color, label in zip(samples, colores, labels):
+    indices_mag = np.argsort(mag_i)[:sample_size]  # Más brillantes: menor magnitud i
+    r_mag, mean_mag, std_mag = procesar_sample(indices_mag, tag=f"mag_top_{sample_size}")
+
+    if r_mag is not None:
+        plt.semilogx(r_mag, mean_mag, color=color, label=f'{label} (Magnitud i)')
+        plt.fill_between(r_mag, mean_mag - std_mag, mean_mag + std_mag, color=color, alpha=0.3)
 
 plt.axhline(1, linestyle='--', color='black')
-plt.xlabel("Separación r [Mpc/h]", fontsize=12)
-plt.ylabel(r"Ratio $\xi_{\mathrm{shuffle}} / \xi_{\mathrm{original}}$", fontsize=12)
-plt.title("Comparación del Galaxy Assembly Bias por magnitud i")
+plt.xlim(0.1, 20)
+plt.ylim(0.64, 1.06)
+plt.xlabel(r"$r$ [$\mathrm{Mpc}/h$]", fontsize=12)
+plt.ylabel(r"$R = (\xi_{\mathrm{shuffled}} / \xi_{\mathrm{original}})$", fontsize=12)
+plt.title("Sesgo de ensamblaje de galaxias en función de la magnitud absoluta $i$")
 plt.legend()
 plt.grid(True, alpha=0.5)
 plt.tight_layout()
-plt.savefig(os.path.expanduser("~/Desktop/shuffling_comparacion_magi.png"), dpi=300)
+plt.savefig(os.path.expanduser("~/Desktop/GAB_MagI_MostBrilliant.png"), dpi=300)
 plt.show()
+
+print("Gráfico de magnitud i brillante generado y guardado en el escritorio.")
