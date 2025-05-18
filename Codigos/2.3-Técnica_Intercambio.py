@@ -1,4 +1,3 @@
-# ESTE ES EL CODIGO QUE ENTREGUE EN GITHUB EL 17 MAYO 2025
 # Intercambio de galaxias entre los 3 halos más masivos
 
 import numpy as np
