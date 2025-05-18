@@ -1,2 +1,2 @@
 # TFM-GAB
-Este archivo contiene los Códigos Python y las Figuras originales en orden ascendente que se incluyen en el TFM para una mejor comprensión del proceso realizado en la detección del Galaxy Assembly Bias (GAB).
+Este archivo contiene los Códigos Python y las Figuras originales en orden ascendente que se incluyen en el TFM para una mejor comprensión del proceso realizado en la detección del Galaxy Assembly Bias (GAB). Se entiende por sesgo de ensamblaje de galaxias como la variación en el agrupamiento a gran escala de una población de galaxias, producto de dependencias en la relación galaxia - halo con propiedades del halo distintas a su masa, entre las que se encuentran la historia de formación, la concentración o el spin (Hadzhiyska et al., 2021).
