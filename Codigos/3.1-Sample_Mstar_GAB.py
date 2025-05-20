@@ -1,12 +1,12 @@
 # Importa librerías para cálculos numéricos, gráficos y la función de correlación de Corrfunc.
-import numpy as np
-import matplotlib.pyplot as plt
-from Corrfunc.theory.xi import xi
-import os
+import numpy as np  # Necesario para análisis numérico
+import matplotlib.pyplot as plt # Necesario para generar gráficos
+from Corrfunc.theory.xi import xi # Permite calular la función de correlación
+import os  # Manejo de archivos y carpetas
 
 #Define el tamaño de la caja de simulación (en Mpc/h), el número de hilos para Corrfunc y los bordes de los bins espaciales para r.
-boxsize = 205
-nthreads = 4
+boxsize = 205 # Define el tamaño de la caja periódica.
+nthreads = 4  # Número de hilos para Corrfunc
 bin_edges = np.logspace(np.log10(0.1), np.log10(50), 20)
 # Crea un directorio para guardar resultados.
 output_dir = "/Users/hakeem/Desktop/Python/shuffling_flexible"
@@ -46,7 +46,7 @@ def procesar_sample(indices, tag):
 
         if len(halo_mass) == 0:
             continue
-# Bin de masa de halo (con bin_width = 0.01)
+# Bin de masa de halo (con bin_width = 0.1)
         log_mass = np.log10(halo_mass)
         bin_width = 0.1
         mass_bins = np.arange(np.min(log_mass), np.max(log_mass) + bin_width, bin_width)
@@ -135,7 +135,7 @@ for sample_size, color, label in zip(samples, colores, labels):
     if r_mst is not None:
         plt.semilogx(r_mst, mean_mst, color=color, label=f'{label} (M$_\star$)')
         plt.fill_between(r_mst, mean_mst - std_mst, mean_mst + std_mst, color=color, alpha=0.3)
-
+# Define el estilo del gráfico: Añade línea de referencia en 1 (donde no hay efecto del shuffling) / Etiqueta bien el gráfico y lo guarda como imagen en el escritorio.
 plt.axhline(1, linestyle='--', color='black')
 plt.xlim(0.1, 20)
 plt.ylim(0.6, 1.06)
