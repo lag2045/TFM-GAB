@@ -1,12 +1,12 @@
 # Importar librerias 
-import numpy as np # para análisis numérico
-import matplotlib.pyplot as plt  # para generar gráficos
-from Corrfunc.theory.xi import xi  # calular la funcion de correlación
-import os 
+import numpy as np # Necesario para análisis numérico
+import matplotlib.pyplot as plt  # Necesario para generar gráficos
+from Corrfunc.theory.xi import xi  # Permite calular la función de correlación
+import os # Manejo de archivos y carpetas
 
 # Parámetros globales de la caja de simulación: Define el tamaño de la caja de simulación, el número de hilos y los bins de distancia r para la correlación.
-boxsize = 205
-nthreads = 4
+boxsize = 205 # Define el tamaño de la caja periódica.
+nthreads = 4  # Número de hilos para Corrfunc
 bin_edges = np.logspace(np.log10(0.1), np.log10(50), 20)
 # Crea una carpeta donde se guardarán los resultados (npz y gráficas).
 output_dir = "/Users/hakeem/Desktop/Python/shuffling_por_masa_galaxias"
