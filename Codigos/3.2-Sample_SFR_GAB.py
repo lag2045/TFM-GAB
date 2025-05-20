@@ -1,9 +1,9 @@
 # Galaxy Assembly Bias usando SFR (Star Formation Rate)
 # Importar Librerías 
-import numpy as np # cálculos numéricos.
-import matplotlib.pyplot as plt # para graficar
-from Corrfunc.theory.xi import xi # calcula la función de correlación de dos puntos.
-import os # manejo del sistema de archivos.
+import numpy as np # Necesario para cálculos numéricos.
+import matplotlib.pyplot as plt # Necesario para graficar
+from Corrfunc.theory.xi import xi # Permite calcular la función de correlación de dos puntos.
+import os # Necesario manejo del sistema de archivos.
 
 # Parámetros globales de la caja de simulación
 boxsize = 205 # tamaño de la caja de simulación (Mpc/h).
@@ -136,7 +136,7 @@ for sample_size, color, label in zip(samples, colores, labels):
     if r_sfr is not None:
         plt.semilogx(r_sfr, mean_sfr, color=color, label=f'{label} (SFR)')
         plt.fill_between(r_sfr, mean_sfr - std_sfr, mean_sfr + std_sfr, color=color, alpha=0.3)
-
+# Define el estilo del gráfico: Añade línea de referencia en 1 (donde no hay efecto del shuffling) / Etiqueta bien el gráfico y lo guarda como imagen en el escritorio.
 plt.axhline(1, linestyle='--', color='black')
 plt.xlim(0.1, 20)
 plt.ylim(0.85, 1.12)
@@ -148,5 +148,4 @@ plt.grid(True, alpha=0.5)
 plt.tight_layout()
 plt.savefig(os.path.expanduser("~/Desktop/GAB_SFR_MostActive.png"), dpi=300)
 plt.show()
-
 print("Gráfico de alta SFR generado y guardado en el escritorio.")
