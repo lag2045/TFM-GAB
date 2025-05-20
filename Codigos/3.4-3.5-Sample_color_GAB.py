@@ -1,9 +1,9 @@
 # Galaxy Assembly Bias (GAB) en función del color (g‒r) de las galaxias más brillantes en banda i
 # Importacion de librerias
-import numpy as np # operaciones matemáticas.
-import matplotlib.pyplot as plt #  hacer gráficos
-from Corrfunc.theory.xi import xi # calcular la función de correlación.
-import os # gestión de archivos
+import numpy as np # Necesario para operaciones matemáticas.
+import matplotlib.pyplot as plt #  Necesario para hacer gráficos
+from Corrfunc.theory.xi import xi # Permite calcular la función de correlación.
+import os # Necesario para el manejo y gestión de archivos
 
 # Parámetros globales de la caja de simulación 
 boxsize = 205 # tamaño de la caja de simulación (en Mpc/h)
@@ -30,7 +30,7 @@ mag_r = mag_abs[:, 1]
 mag_i = mag_abs[:, 2]
 color_gr = mag_g - mag_r  # Color (g - r)
 
-# === SELECCIÓN POR COLOR ===
+# Selección por color
 azul_cut = 0.6
 rojo_cut = 0.75
 
@@ -39,8 +39,8 @@ indices_rojas = np.where(color_gr > rojo_cut)[0]
 
 # Igualar número de galaxias
 n_min = min(len(indices_azules), len(indices_rojas))
-indices_azules = indices_azules[np.argsort(mag_i[indices_azules])[:n_min]]  # más brillantes
-indices_rojas = indices_rojas[np.argsort(mag_i[indices_rojas])[:n_min]]    # más brillantes
+indices_azules = indices_azules[np.argsort(mag_i[indices_azules])[:n_min]]  # azules más brillantes
+indices_rojas = indices_rojas[np.argsort(mag_i[indices_rojas])[:n_min]]    # rojas más brillantes
 
 print(f"Número de galaxias azules seleccionadas: {len(indices_azules)}")
 print(f"Número de galaxias rojas seleccionadas: {len(indices_rojas)}")
@@ -57,7 +57,7 @@ plt.ylabel('Número de galaxias')
 plt.title('Distribución de masa estelar')
 plt.legend()
 
-# Histograma de color g-r
+# Histograma de color (g-r)
 plt.subplot(1, 2, 2)
 plt.hist(color_gr[indices_azules], bins=30, color='blue', edgecolor='black', alpha=0.6, label='Galaxias azules')
 plt.hist(color_gr[indices_rojas], bins=30, color='red', edgecolor='black', alpha=0.6, label='Galaxias rojas')
@@ -181,6 +181,7 @@ if r_rojo is not None:
     plt.semilogx(r_rojo, mean_rojo, color='red', label='Galaxias rojas')
     plt.fill_between(r_rojo, mean_rojo - std_rojo, mean_rojo + std_rojo, color='red', alpha=0.3)
 
+# Define el estilo del gráfico: Añade línea de referencia en 1 (donde no hay efecto del shuffling) / Etiqueta bien el gráfico y lo guarda como imagen en el escritorio
 plt.axhline(1, linestyle='--', color='black')
 plt.xlim(0.1, 20)
 plt.ylim(0.54, 1.05)
@@ -192,5 +193,4 @@ plt.grid(True, alpha=0.5)
 plt.tight_layout()
 plt.savefig(os.path.expanduser("~/Desktop/GAB_Color_BlueRed_SIN_TOTAL.png"))
 plt.show()
-
 print("Análisis completo finalizado y guardado en el escritorio.")
