@@ -1,9 +1,9 @@
 # Galaxy Assembly bias en función de la magnitud absoluta en la banda i
 # Importar librerias
-import numpy as np # cálculos numéricos.
-import matplotlib.pyplot as plt # para graficar.
-from Corrfunc.theory.xi import xi # función de correlación de dos puntos (Corrfunc).
-import os # manejo del sistema de archivos.
+import numpy as np # Necesario  para cálculos numéricos.
+import matplotlib.pyplot as plt # Necesario para graficar.
+from Corrfunc.theory.xi import xi # Permite calcular la función de correlación de dos puntos (Corrfunc).
+import os # Necesario para manejo del sistema de archivos.
 
 # Parámetros globales de caja de simulación
 boxsize = 205 # tamaño de la simulación.
@@ -100,7 +100,7 @@ def procesar_sample(indices, tag):
         shuffled_galaxies = np.array(shuffled_galaxies)
         if len(original_galaxies) == 0 or len(shuffled_galaxies) == 0:
             continue
-# Cálculo de funcion de correlación y ratio: Calcula la función de correlación para el original y el shuffled. Se añade un pequeño término para evitar división por cero.
+# Cálculo de función de correlación y ratio: Calcula la función de correlación para el original y el shuffled. Se añade un pequeño término para evitar división por cero.
         x_o, y_o, z_o = original_galaxies.T
         x_s, y_s, z_s = shuffled_galaxies.T
         xi_o = xi(boxsize, nthreads, bin_edges, x_o, y_o, z_o)['xi']
@@ -136,7 +136,7 @@ for sample_size, color, label in zip(samples, colores, labels):
     if r_mag is not None:
         plt.semilogx(r_mag, mean_mag, color=color, label=f'{label} (Magnitud i)')
         plt.fill_between(r_mag, mean_mag - std_mag, mean_mag + std_mag, color=color, alpha=0.3)
-
+# Define el estilo del gráfico: Añade línea de referencia en 1 (donde no hay efecto del shuffling) / Etiqueta bien el gráfico y lo guarda como imagen en el escritorio.
 plt.axhline(1, linestyle='--', color='black')
 plt.xlim(0.1, 20)
 plt.ylim(0.64, 1.06)
